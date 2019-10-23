@@ -14,11 +14,14 @@ class Foo {
         foreach ($inputs as $value) {
             if (strpos($value, 'price') !== false) {
                 $split = explode(' ', $value);
+                //price calculations
                 $temp = $this->planPriceCalculations($json,$split[1]);
+                //sort the array by the key second parametre is key default total
                 $temp = $this->sortArray($temp);
                 $this->printArray($temp); 
             } else if (strpos($value, 'usage') !== false) {
                 $split = explode(' ', $value);
+                //calculate the kwh from the money spend also print it
                 $result = $this->calculateKWH($json, $split[1], $split[2], $split[3])."\n";
                 fwrite(STDOUT, $result);
             } else if (strpos($value, 'exit') !== false) {
@@ -31,16 +34,18 @@ class Foo {
     {
         $selectedPlan = [];
         $kwh = 0;
-
+        //loop until finding the suplier and plan in the array
         foreach ($plansArray as $key => $value) {
             if($value['supplier'] == $supplier && $value['plan'] == $plan){
                 $selectedPlan = $value;
                 break;
             }
         }
-
+        //convert monhtly spend money to yearly and pence
         $inPence = $spend * 12 * 100;
 
+
+        //if standing charge is exists first calculate without tax and subtract from pence
         if(array_key_exists("standing_charge", $selectedPlan)){
             $standing = $this->calculateStandigCharge($selectedPlan['standing_charge']);
             $inPence = $this->calculateWithoutTax($inPence) - $standing;
@@ -48,6 +53,10 @@ class Foo {
             $inPence = $this->calculateWithoutTax($inPence);
         }
 
+        //if there are more than 1 rates calculate the threshold with 
+        //the price and subtract from the total pence
+        //if the total pence is less then the first threshold*price divide the total pence to price
+        //and add the result to kwh
         if(count($selectedPlan['rates']) > 1){
             foreach ($selectedPlan['rates'] as $key => $value) {
                 if(array_key_exists("threshold", $value)){
@@ -64,7 +73,7 @@ class Foo {
                 }
             }
         }
-
+        //if we still have pence calculate the rest by dividin to the price
         if($inPence > 0){
             foreach ($selectedPlan['rates'] as $value) {
                 if(array_key_exists("price", $value)){
@@ -98,7 +107,8 @@ class Foo {
                 throw new Exception("One of the required parametre is not exist : rates", 1);
             }
             $rates = $this->calculatePrice($value['rates'],$kwh);
-        
+            
+            //if there is standing_charge calculate it before the tax
             if(array_key_exists("standing_charge", $value)){
                 $standing = $this->calculateStandigCharge($value['standing_charge']);
                 $rates += $standing;
