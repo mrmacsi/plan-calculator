@@ -1,7 +1,7 @@
 #!/usr/bin/php -q
 <?php
 
-class Foo {
+class Plans {
     public function start($filename)
     {
         $content    =   file_get_contents($filename); //read file
@@ -170,6 +170,6 @@ class Foo {
     }
 }
 
-$foo = new Foo;
+$plans = new Plans;
 //get file name by arg
-$foo->start($argv[1]);
+$plans->start($argv[1]);
